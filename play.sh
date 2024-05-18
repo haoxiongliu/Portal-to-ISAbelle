@@ -1,0 +1,1 @@
+sbt compile && sbt assembly && python eval_setup/copy_pisa_jars.py --pisa-jar-path target/scala-2.13/PISA-assembly-0.1.jar --number-of-jars $N --output-path $OUTPUT_PATH

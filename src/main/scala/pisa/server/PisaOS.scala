@@ -593,7 +593,7 @@ class PisaOS(
             |             (result, (${Sledgehammer}.short_string_of_sledgehammer_outcome outcome, [YXML.content_of step]))
             |           end;
             |    in
-            |      Timeout.apply (Time.fromSeconds 35) go_run (state, thy) end
+            |      Timeout.apply (Time.fromSeconds 120) go_run (state, thy) end
             |""".stripMargin
     )
 
@@ -765,7 +765,7 @@ class PisaOS(
       top_level_state: ToplevelState,
       added_names: List[String],
       deleted_names: List[String],
-      timeout_in_millis: Int = 35000
+      timeout_in_millis: Int = 120002
   ): (Boolean, List[String]) = {
     val f_res: Future[(Boolean, List[String])] = Future.apply {
       val first_result = normal_with_Sledgehammer(

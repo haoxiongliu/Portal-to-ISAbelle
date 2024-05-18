@@ -59,7 +59,8 @@ PISA can also be used to extract proof corpus. We extracted the datasets in our 
    ```shell
    wget https://www.isa-afp.org/release/afp-current.tar.gz
    tar -xzf afp-current.tar.gz
-   export AFP=afp-{$AFP_DATE}/thys
+   export AFP_DATE="2022-12-06"
+   export AFP=afp-$AFP_DATE/thys
    isabelle build -b -D $AFP -j 20
    ```
    This takes ~150 hours of CPU time. On a 96-core TPU VM it takes ~5 wall-clock hours. We can extract ~93% of all afp theory files.
@@ -80,6 +81,21 @@ PISA can also be used to extract proof corpus. We extracted the datasets in our 
    ```
 
 ## Evaluation setup (if you want to have N (N>50) PISA servers running on your machine)
+
+0. **How to start servers** (modified by lhx)
+
+   To use sbt to start a server, choose a server between 8001-8200 and
+   ```bash
+   sbt "runMain pisa.server.PisaOneStageServer$PORT"
+   ```
+   Note that from 9000 is OK (see src/main/scala/pisa/server/PisaOneStageServers.scala) but on sqz machines k8s has occupied these ports.
+
+   The other choice is to start with PISA jars using JAVA (see dsp checker.py):
+   ```bash
+   java -cp $JAR_PATH pisa.server.PisaOneStageServer$PORT
+   ```
+   see the next subsection to learn what is JAR_PATH.
+
 1. **Create some PISA jars**
 
    For a single process, sbt is good enough. But for multiple processes, to have native JAVA processes running is a better idea. We first use sbt-assembly to create a fat jar (a jar where all the java code is compiled into and can be run independently).
@@ -89,19 +105,27 @@ PISA can also be used to extract proof corpus. We extracted the datasets in our 
 
    The assembly process should take less than 5 minutes. The compiled jar file is in the target/scala-2.13/ directory as PISA-assembly-0.1.jar. You can then copy the PISA jar for N times if you want the jars to be truly independent and separated by calling the following script:
    ```shell
+   export N=5
+   export OUTPUT_PATH=/data/isa_copy/pisa_jars
    python eval_setup/copy_pisa_jars.py --pisa-jar-path target/scala-2.13/PISA-assembly-0.1.jar --number-of-jars $N --output-path $OUTPUT_PATH
    ```
 
 2. **Create some Isabelle copies**
+
+   <!-- According to the dsp code, It seems that only copy the isabelle files is OK. Can use the same heap. For N < 50 maybe not using different pisa jars is OK as well. (by lhx) -->
 
    This step is to create multiple copies of the Isabelle software as well as the built heap images to avoid IO errors which can occur when many processes are run at the same time. We use $ISABELLE to denote where your Isabelle software lives and $ISABELLE_USER to denote where your built heap images live, which is usually at $USER/.isabelle
 
    Note that one copy of the Isabelle software plus all the heaps needed for the Archive of Formal Proofs amount to **35GB** of disk space. So create copies with care. Alternatively, you can start by trimming the heaps so only the ones you need are kept.
 
    Use the following script to create the copies:
-   ```shell
-   python eval_setup/copy_isabelle.py --isabelle $ISABELLE --isabelle-user $ISABELLE_USER --number-of-copies $N --output-path $OUTPUT_PATH
-   ```
+```shell
+export ISABELLE=~/Isabelle2022
+export N=4
+export OUTPUT_PATH=/data/isa_copy
+export ISABELLE_USER=~/.isabelle
+python eval_setup/copy_isabelle.py --isabelle $ISABELLE --isabelle-user $ISABELLE_USER --number-of-copies $N --output-path $OUTPUT_PATH
+```
 
 ## Extract PISA dataset
    ### Archive of formal proofs

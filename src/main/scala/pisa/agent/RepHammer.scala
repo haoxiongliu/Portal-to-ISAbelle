@@ -82,7 +82,7 @@ object RepHammer {
            |             (result, (${Sledgehammer}.short_string_of_sledgehammer_outcome outcome, [YXML.content_of step]))
            |           end;
            |    in
-           |      Timeout.apply (Time.fromSeconds 35) go_run (state, thy) end
+           |      Timeout.apply (Time.fromSeconds 120) go_run (state, thy) end
            |""".stripMargin
       )
 
