@@ -26,7 +26,7 @@ PISA can also be used to extract proof corpus. We extracted the datasets in our 
 2. **Clone project and make sure it compiles**
 
     ```shell
-    git clone https://github.com/albertqjiang/Portal-to-ISAbelle.git
+    git clone https://github.com/haoxiongliu/Portal-to-ISAbelle.git
     cd Portal-to-ISAbelle
     ```
 
@@ -37,9 +37,9 @@ PISA can also be used to extract proof corpus. We extracted the datasets in our 
    
 3. **Configure Isabelle**
 
-    Go back to home directory first and download isabelle2021
+    Go back to home directory first and download isabelle2022
     ```shell
-    cd ~
+    cd ~ # this link might be out of date. find one online
     wget https://isabelle.in.tum.de/dist/Isabelle2022_linux.tar.gz
     tar -xzf Isabelle2022_linux.tar.gz
     alias isabelle=~/Isabelle2022/bin/isabelle
@@ -53,7 +53,7 @@ PISA can also be used to extract proof corpus. We extracted the datasets in our 
    ```
    This takes ~8 hours of CPU time. The actual time depends on the number of CPUs you have. On a 96-core TPU VM it takes about 15 minutes.
 
-5. **Download and build afp**
+5. **Download and build afp (optional)**
    
    To build with 10 parallel processes:
    ```shell
@@ -61,18 +61,18 @@ PISA can also be used to extract proof corpus. We extracted the datasets in our 
    tar -xzf afp-current.tar.gz
    export AFP_DATE="2022-12-06"
    export AFP=afp-$AFP_DATE/thys
-   isabelle build -b -D $AFP -j 20
+   isabelle build -b -D $AFP -j 20 # better build yourself
    ```
    This takes ~150 hours of CPU time. On a 96-core TPU VM it takes ~5 wall-clock hours. We can extract ~93% of all afp theory files.
-
-   We built the heap images for two options:
+   
+   <!-- We built the heap images for two options:
    1. Isabelle2021 with afp-2021-10-22 for linux machines (ubuntu). You can download it at:
    https://archive.org/download/isabelle_heaps.tar/isabelle_heaps.tar.gz
    and decompress it as ~/.isabelle.
    2. Isabelle2022 with afp-2022-12-06 for linux machines (ubuntu). You can download it at:
    https://archive.org/download/isabelle2022_afp20221206_heaps/isabelle2022heaps.tar.gz and decompress it as ~/.isabelle.
 
-   Note: this does not always work on different operating systems.
+   Note: this does not always work on different operating systems. -->
 
 6. **Extract the test theorems**
    The universal test theorems contains 3000 theorems with their file paths and names. The first 600 of them are packaged as "quick" theorems if you have no patience testing all 3000 out.
@@ -81,6 +81,8 @@ PISA can also be used to extract proof corpus. We extracted the datasets in our 
    ```
 
 ## Evaluation setup (if you want to have N (N>50) PISA servers running on your machine)
+
+**This section has been integrated into dev-lhx-3 llama-marcel repo** 
 
 0. **How to start servers** (modified by lhx)
 
@@ -116,16 +118,15 @@ PISA can also be used to extract proof corpus. We extracted the datasets in our 
 
    This step is to create multiple copies of the Isabelle software as well as the built heap images to avoid IO errors which can occur when many processes are run at the same time. We use $ISABELLE to denote where your Isabelle software lives and $ISABELLE_USER to denote where your built heap images live, which is usually at $USER/.isabelle
 
-   Note that one copy of the Isabelle software plus all the heaps needed for the Archive of Formal Proofs amount to **35GB** of disk space. So create copies with care. Alternatively, you can start by trimming the heaps so only the ones you need are kept.
+   Note that one copy of the Isabelle software plus all the heaps needed for the Archive of Formal Proofs amount to **47GB** of disk space. So create copies with care. Alternatively, you can start by trimming the heaps so only the ones you need are kept.
 
    Use the following script to create the copies:
-```shell
-export ISABELLE=~/Isabelle2022
-export N=4
-export OUTPUT_PATH=/data/isa_copy
-export ISABELLE_USER=~/.isabelle
-python eval_setup/copy_isabelle.py --isabelle $ISABELLE --isabelle-user $ISABELLE_USER --number-of-copies $N --output-path $OUTPUT_PATH
-```
+   ```shell
+   export ISABELLE=~/Isabelle2022
+   export OUTPUT_PATH=/data/isa_copy
+   export ISABELLE_USER=~/.isabelle
+   python eval_setup/copy_isabelle.py --isabelle $ISABELLE --isabelle-user $ISABELLE_USER --number-of-copies $N --output-path $OUTPUT_PATH
+   ```
 
 ## Extract PISA dataset
    ### Archive of formal proofs
