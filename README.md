@@ -10,7 +10,7 @@ PISA can also be used to extract proof corpus. We extracted the datasets in our 
     Install SDKMAN
     ```shell
     curl -s "https://get.sdkman.io" | bash
-    source .bashrc
+    source ~/.bashrc
     ```
     Try
     ```shell
@@ -38,13 +38,27 @@ PISA can also be used to extract proof corpus. We extracted the datasets in our 
 3. **Configure Isabelle**
 
     Go back to home directory first and download isabelle2022
-    ```shell
-    cd ~ # this link might be out of date. find one online
-    wget https://isabelle.in.tum.de/dist/Isabelle2022_linux.tar.gz
+    ```bash
+    cd ~ 
+    # this link might be out of date. find one online
+    # wget https://isabelle.in.tum.de/dist/Isabelle2022_linux.tar.gz
+    scp ay8804:/home/user/Isabelle2022_linux.tar.gz .
     tar -xzf Isabelle2022_linux.tar.gz
     alias isabelle=~/Isabelle2022/bin/isabelle
-    ``` 
+    ```
     
+    To add an Interactive environment
+   ```bash
+   cat > ~/Isabelle2022/src/HOL/Examples/InterComplex.thy <<EOF
+   theory InterComplex
+   imports HOL.HOL Complex_Main "HOL-Library.Code_Target_Numeral" "HOL-Library.Sum_of_Squares" "HOL-Computational_Algebra.Computational_Algebra" "HOL-Number_Theory.Number_Theory"
+   begin
+
+   end
+   EOF
+   ```
+
+
 4. **Build Isabelle HOL**
    
    To build with 20 parallel processes:
@@ -63,7 +77,8 @@ PISA can also be used to extract proof corpus. We extracted the datasets in our 
    export AFP=afp-$AFP_DATE/thys
    isabelle build -b -D $AFP -j 20 # better build yourself
    ```
-   This takes ~150 hours of CPU time. On a 96-core TPU VM it takes ~5 wall-clock hours. We can extract ~93% of all afp theory files.
+
+   <!-- This takes ~150 hours of CPU time. On a 96-core TPU VM it takes ~5 wall-clock hours. We can extract ~93% of all afp theory files. -->
    
    <!-- We built the heap images for two options:
    1. Isabelle2021 with afp-2021-10-22 for linux machines (ubuntu). You can download it at:
@@ -71,10 +86,9 @@ PISA can also be used to extract proof corpus. We extracted the datasets in our 
    and decompress it as ~/.isabelle.
    2. Isabelle2022 with afp-2022-12-06 for linux machines (ubuntu). You can download it at:
    https://archive.org/download/isabelle2022_afp20221206_heaps/isabelle2022heaps.tar.gz and decompress it as ~/.isabelle.
-
    Note: this does not always work on different operating systems. -->
 
-6. **Extract the test theorems**
+6. **Extract the test theorems(optional)**
    The universal test theorems contains 3000 theorems with their file paths and names. The first 600 of them are packaged as "quick" theorems if you have no patience testing all 3000 out.
    ```shell
    tar -xzf universal_test_theorems.tar.gz
@@ -82,7 +96,7 @@ PISA can also be used to extract proof corpus. We extracted the datasets in our 
 
 ## Evaluation setup (if you want to have N (N>50) PISA servers running on your machine)
 
-**This section has been integrated into dev-lhx-3 llama-marcel repo** 
+**This section has been integrated into dev-lhx-3 llama-marcel repo**
 
 0. **How to start servers** (modified by lhx)
 
