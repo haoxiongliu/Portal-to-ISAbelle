@@ -9,6 +9,8 @@ PISA can also be used to extract proof corpus. We extracted the datasets in our 
    
     Install SDKMAN
     ```shell
+    sudo apt update
+    sudo apt install zip curl
     curl -s "https://get.sdkman.io" | bash
     source ~/.bashrc
     ```
@@ -25,17 +27,25 @@ PISA can also be used to extract proof corpus. We extracted the datasets in our 
     ```
 2. **Clone project and make sure it compiles**
 
-    ```shell
-    git clone https://github.com/haoxiongliu/Portal-to-ISAbelle.git
-    cd Portal-to-ISAbelle
-    ```
+   ```shell
+   git clone --single-branch --branch dev_lhx git@github.com:haoxiongliu/Portal-to-ISAbelle.git
+   ```
 
-    Then compile the project:
-    ```shell
-    sbt compile
-    ```
+   In order to be accessed by checker process
+   ```shell
+   cp ~/.bashrc ~/.bashrc.backup
+   cat >> ~/.bashrc <<EOF
+   export PISA_PATH=~/Portal-to-ISAbelle/src/main/python
+   EOF
+   ```
+
+   Then compile the project:
+   ```shell
+   sbt compile
+   sbt assembly # for java
+   ```
    
-3. **Configure Isabelle**
+3. **Configure Isabelle (parallel with 2)**
 
     Go back to home directory first and download isabelle2022
     ```bash
@@ -44,7 +54,6 @@ PISA can also be used to extract proof corpus. We extracted the datasets in our 
     # wget https://isabelle.in.tum.de/dist/Isabelle2022_linux.tar.gz
     scp ay8804:/home/user/Isabelle2022_linux.tar.gz .
     tar -xzf Isabelle2022_linux.tar.gz
-    alias isabelle=~/Isabelle2022/bin/isabelle
     ```
     
     To add an Interactive environment
@@ -61,11 +70,14 @@ PISA can also be used to extract proof corpus. We extracted the datasets in our 
 
 4. **Build Isabelle HOL**
    
-   To build with 20 parallel processes:
+   To build with 30 parallel processes:
    ```shell
+   alias isabelle=~/Isabelle2022/bin/isabelle
    isabelle build -b -D Isabelle2022/src/HOL/ -j 20
    ```
    This takes ~8 hours of CPU time. The actual time depends on the number of CPUs you have. On a 96-core TPU VM it takes about 15 minutes.
+
+   **Finished** for llama-marcel repo checking setup.
 
 5. **Download and build afp (optional)**
    

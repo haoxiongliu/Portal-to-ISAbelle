@@ -1,8 +1,9 @@
-ports = str(input("Enter the ports, separated by commas:\n")).strip()
-ports = ports.split(",")
-ports = [int(port.strip()) for port in ports]
-ports = [port for port in ports if port]
-use_hammers = str(input("Use hammers (T/F):\n")).strip()
+# ports = str(input("Enter the ports, separated by commas:\n")).strip()
+# ports = ports.split(",")
+# ports = [int(port.strip()) for port in ports]
+# ports = [port for port in ports if port]
+ports = [8199]
+use_hammers = 'F' # str(input("Use hammers (T/F):\n")).strip()
 if use_hammers == "T" or use_hammers == "t":
     use_hammers = True
 elif use_hammers == "F" or use_hammers == "f":
@@ -14,9 +15,9 @@ import glob
 import os
 import shutil
 
-home_directory = "/private/home/aqj"
-
-script = f"unset http_proxy; unset https_proxy; python3 src/main/python/one_stage_extraction.py  --isa-path {home_directory}/Isabelle2021 -wd {home_directory}" + "/afp-2021-10-22/thys/{} --saving-directory afp_extractions/{} -tfp {}"
+home_directory = "/home/user"
+# unset http_proxy; unset https_proxy; 
+script = f"python3 src/main/python/one_stage_extraction.py  --isa-path {home_directory}/Isabelle2022 -wd {home_directory}" + "/afp-2022-12-06/thys/{} --saving-directory afp_extractions/{} -tfp {}"
 if use_hammers:
     script = script + " -us"
 
@@ -28,8 +29,8 @@ IGNORED_THEORIES = {}
 IGNORED_ENTRIES = {}
 
 total_files = 0
-for project_name in glob.glob("{}/afp-2021-10-22/thys/**/*.thy".format(home_directory), recursive=True):
-    project_single_name = project_name.split("/")[6]
+for project_name in glob.glob("{}/afp-2022-12-06/thys/**/*.thy".format(home_directory), recursive=True):
+    project_single_name = project_name.split("/")[-2] # original: add_hoc 6
     file_single_name = project_name.split("/")[-1]
 
     # Ignore already extracted files
@@ -58,20 +59,20 @@ if os.path.isdir("scripts/extraction"):
 
 os.makedirs("scripts/extraction")
 
-counter = 0
+wait_server_time = 12
 for j, port in enumerate(ports):
     port_cmds = cmds_for_port[port]
-    for i, cmd in enumerate(port_cmds):
-        with open(f"scripts/extraction/script_{j}.sh", "a") as f:
-            f.write('unset http_proxy; unset https_proxy; sbt "runMain pisa.server.PisaOneStageServer{}"&\n'.format(port))
-            f.write("PIDmain=$!\n")
-            f.write("sleep 12\n")
-            f.write(cmd + "&\n")
-            f.write("PID=$!\n")
-            f.write("wait $PID\n")
-            f.write("rm -rf target/bg-jobs \n")
-            f.write("kill $PIDmain\n")
-        counter += 1
+    with open(f"scripts/extraction/script_{j}.sh", "a") as f:
+        # f.write('unset http_proxy; unset https_proxy; sbt "runMain pisa.server.PisaOneStageServer{}"&\n'.format(port))
+        # f.write(f"sleep {wait_server_time}\n")
+        for i, cmd in enumerate(port_cmds):
+            # f.write("PIDmain=$!\n")
+            # f.write(cmd + "&\n")
+            f.write(cmd + "\n")
+            # f.write("PID=$!\n")
+            # f.write("wait $PID\n")
+            # f.write("rm -rf target/bg-jobs \n")
+            # f.write("kill $PIDmain\n")
 
 
     #
