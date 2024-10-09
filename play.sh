@@ -28,3 +28,5 @@ python3 src/main/python/prepare_episodic_transitions.py \
     -sd /home/user/lhx/llama_marcel/play/proof_and_states \
     --proof --state
 
+PORT=8199
+sbt "runMain pisa.server.PisaOneStageServer$PORT"

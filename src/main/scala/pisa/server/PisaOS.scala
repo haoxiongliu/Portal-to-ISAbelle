@@ -62,6 +62,7 @@ class PisaOS(
   if (debug) println("Checkpoint 1")
   val currentTheoryName: String =
     path_to_file.split("/").last.replace(".thy", "")
+  // TODO: modify this add-hoc implementation
   val currentProjectName: String = {
     if (path_to_file.contains("afp")) {
       working_directory
@@ -161,6 +162,13 @@ class PisaOS(
       """fn (int, tr, st) => let
         |  fun go_run (a, b, c) = Toplevel.command_exception a b c
         |  in Timeout.apply (Time.fromSeconds 30) go_run (int, tr, st) end""".stripMargin
+    )
+  val command_exception_with_300s_timeout
+      : MLFunction3[Boolean, Transition.T, ToplevelState, ToplevelState] =
+    compileFunction[Boolean, Transition.T, ToplevelState, ToplevelState](
+      """fn (int, tr, st) => let
+        |  fun go_run (a, b, c) = Toplevel.command_exception a b c
+        |  in Timeout.apply (Time.fromSeconds 300) go_run (int, tr, st) end""".stripMargin
     )
   val command_errors: MLFunction3[
     Boolean,
@@ -568,6 +576,8 @@ class PisaOS(
   // prove_with_Sledgehammer is mostly identical to check_with_Sledgehammer except for that when the returned Boolean is true, it will
   // also return a non-empty list of Strings, each of which contains executable commands to close the top subgoal. We might need to chop part of
   // the string to get the actual tactic. For example, one of the string may look like "Try this: by blast (0.5 ms)".
+  // cvc4 is stronger enough.  vampire verit e spass z3 zipperposition. 
+  // original version: cvc5, which is not included in Isabelle2022 in default
   if (debug) println("Checkpoint 11")
   val normal_with_Sledgehammer: MLFunction4[ToplevelState, Theory, List[
     String
@@ -586,7 +596,7 @@ class PisaOS(
             |             val p_state = Toplevel.proof_of state;
             |             val ctxt = Proof.context_of p_state;
             |             val params = ${Sledgehammer_Commands}.default_params thy
-            |                [("provers", "cvc5 vampire verit e spass z3 zipperposition"),("timeout","30"),("verbose","true")];
+            |                [("provers","cvc4 vampire verit e spass z3 zipperposition"),("timeout","30"),("debug","true"),("max_proofs","1"),("preplay_timeout","2")];
             |             val results = ${Sledgehammer}.run_sledgehammer params ${Sledgehammer_Prover}.Normal NONE 1 override p_state;
             |             val (result, (outcome, step)) = results;
             |           in
@@ -660,6 +670,17 @@ class PisaOS(
     ).retrieveNow.force
   }
 
+  def singleTransitionWith300sTimeout(
+      single_transition: Transition.T,
+      top_level_state: ToplevelState
+  ): ToplevelState = {
+    command_exception_with_300s_timeout(
+      true,
+      single_transition,
+      top_level_state
+    ).retrieveNow.force
+  }
+
   def singleTransition(
       single_transition: Transition.T,
       top_level_state: ToplevelState
@@ -708,7 +729,7 @@ class PisaOS(
   def step(
       isar_string: String,
       top_level_state: ToplevelState,
-      timeout_in_millis: Int = 2000
+      timeout_in_millis: Int = 3000
   ): ToplevelState = {
     if (debug) println("Begin step")
     // Normal isabelle business
@@ -729,7 +750,10 @@ class PisaOS(
             continue.breakable {
               if (text.trim.isEmpty) continue.break
               // println("Small step : " + text)
-              tls_to_return = if (timeout_in_millis > 10000) {
+              // This timeout is the actual_timeout passed
+              tls_to_return = if (timeout_in_millis > 31000) {
+                singleTransitionWith300sTimeout(transition, tls_to_return)
+              } else if (timeout_in_millis > 10000) {
                 singleTransitionWith30sTimeout(transition, tls_to_return)
               } else singleTransitionWith10sTimeout(transition, tls_to_return)
               // println("Applied transition successfully")
@@ -761,11 +785,12 @@ class PisaOS(
     getStateString
   }
 
+  // timeout 0ms means the default value should never be used
   def normal_with_hammer(
       top_level_state: ToplevelState,
       added_names: List[String],
       deleted_names: List[String],
-      timeout_in_millis: Int = 120002
+      timeout_in_millis: Int = 0
   ): (Boolean, List[String]) = {
     val f_res: Future[(Boolean, List[String])] = Future.apply {
       val first_result = normal_with_Sledgehammer(

@@ -149,17 +149,20 @@ class OneStageBody extends ZServer[ZEnv, Any] {
     ""
   }
 
+  // normal_with_hammer(partial) is passed in as hammer_method
   def hammer_actual_step(
       old_state: ToplevelState,
       new_name: String,
-      hammer_method: (ToplevelState, Int) => (Boolean, List[String])
+      hammer_method: (ToplevelState, Int) => (Boolean, List[String]),
+      timeout_for_hammer: Int
   ): String = {
     // If found a sledgehammer step, execute it differently
     var raw_hammer_strings = List[String]()
     val actual_step: String =
       try {
-        val total_result = hammer_method(old_state, 120001)
-        // println(total_result)
+        // 我现在比较确定就是这里实际控制了timeout
+        val total_result = hammer_method(old_state, timeout_for_hammer)
+        println(total_result)
         val success = total_result._1
         if (success) {
           // println("Hammer string list: " + total_result._2.mkString(" ||| "))
@@ -206,16 +209,26 @@ class OneStageBody extends ZServer[ZEnv, Any] {
         }
         val partial_hammer = (state: ToplevelState, timeout: Int) =>
           pisaos.normal_with_hammer(state, add_names, del_names, timeout)
-        actual_step = hammer_actual_step(old_state, new_name, partial_hammer)
+        // 有以下几个timeout种类
+        // hammer调用的方法timeout, 一共5个方法, 从这里开始定: 120
+        // ML的hammer的timeout, 可设定为inf: 600
+        // 调用上述ML调用的timeout, 传进normal_with_hammer: 135, Future机制
+        // Scala的step的actual_timeout, 分为三档, t_f_h>30就会被设为300
+        val timeout_for_hammer = 120001 + 5000
+        actual_step = hammer_actual_step(old_state, new_name, partial_hammer, timeout_for_hammer)
+        actual_timeout = timeout_for_hammer + 5000
         hammered = true
       } else if (action.startsWith(ALLOW_MORE_TIME)) {
         actual_step = action.split(ALLOW_MORE_TIME).drop(1).mkString("").trim
         actual_timeout = 30000
+      } else if (action.startsWith(SMT_HAMMER)) {
+        actual_step = action
+        actual_timeout = 30003
       } else {
         actual_step = action
       }
       // println("Actual step: " + actual_step)
-
+      // In the current logic, timeout will be meaningful for <=10s, >10s, >100s
       val new_state: ToplevelState =
         pisaos.step(actual_step, old_state, actual_timeout)
       // println("Application successful")
