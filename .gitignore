@@ -11,6 +11,7 @@ std_extractions/
 
 *.ckpt
 data
+play.jsonl
 generated/
 
 *.pyc

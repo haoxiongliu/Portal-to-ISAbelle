@@ -1,8 +1,8 @@
 # PISA (Portal to ISAbelle)
+
+This is a modified version of the original [PISA](https://github.com/albertqjiang/Portal-to-ISAbelle) that accodomates for [ProofAug](https://github.com/haoxiongliu/ProofAug).
+
 PISA supports automated proof search with the interactive theorem prover [Isabelle](https://isabelle.in.tum.de).
-
-PISA can also be used to extract proof corpus. We extracted the datasets in our AITP 2021 paper [LISA: Language models of ISAbelle proofs](http://aitp-conference.org/2021/abstract/paper_17.pdf) with it.
-
 
 ## Installation
 1. **Scala configuration**
@@ -31,14 +31,6 @@ PISA can also be used to extract proof corpus. We extracted the datasets in our 
    git clone --single-branch --branch dev_lhx git@github.com:haoxiongliu/Portal-to-ISAbelle.git
    ```
 
-   In order to be accessed by checker process
-   ```shell
-   cp ~/.bashrc ~/.bashrc.backup
-   cat >> ~/.bashrc <<EOF
-   export PISA_PATH=~/Portal-to-ISAbelle/src/main/python
-   EOF
-   ```
-
    Then compile the project:
    ```shell
    sbt compile
@@ -50,9 +42,7 @@ PISA can also be used to extract proof corpus. We extracted the datasets in our 
     Go back to home directory first and download isabelle2022
     ```bash
     cd ~ 
-    # this link might be out of date. find one online
-    # wget https://isabelle.in.tum.de/dist/Isabelle2022_linux.tar.gz
-    scp ay8804:/home/user/Isabelle2022_linux.tar.gz .
+    wget https://isabelle.in.tum.de/website-Isabelle2022/dist/Isabelle2022_linux.tar.gz
     tar -xzf Isabelle2022_linux.tar.gz
     ```
     
